@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Object Management System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .nav-button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            text-decoration: none;
+            text-align: center;
+        }
+        .nav-button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Object Management System</h1>
+        <div style="display:flex;flex-wrap:wrap;gap:20px;justify-content:center;margin-top:40px;">
+            <div onclick="window.location.href='list.html'" style="width:200px;height:120px;background:#fff;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.2em;">物品管理</div>
+            <div onclick="window.location.href='upload.html'" style="width:200px;height:120px;background:#fff;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.2em;">物品录入</div>
+            <div onclick="window.location.href='qrcode.html'" style="width:200px;height:120px;background:#fff;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.2em;">二维码管理</div>
+            <div onclick="window.location.href='search.html'" style="width:200px;height:120px;background:#fff;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.2em;">物品查询</div>
+        </div>
+    </div>
+</body>
+</html> 

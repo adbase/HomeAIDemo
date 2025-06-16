@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>物品查询</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 20px; }
+        .search-bar { display: flex; gap: 10px; margin-bottom: 20px; }
+        .search-bar input, .search-bar select { padding: 8px; border-radius: 4px; border: 1px solid #ccc; }
+        .search-bar button { padding: 8px 18px; border-radius: 4px; border: none; background: #007bff; color: #fff; cursor: pointer; }
+        .search-bar button:hover { background: #0056b3; }
+        .result-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
+        .item-card { background: #fafafa; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.07); padding: 16px; display: flex; flex-direction: column; align-items: center; }
+        .item-thumb { width: 180px; height: 180px; object-fit: cover; border-radius: 6px; margin-bottom: 10px; }
+        .item-name { font-weight: bold; margin-bottom: 6px; }
+        .item-qrcode { margin-top: 8px; text-align: center; }
+        .item-qrcode img { width: 80px; height: 80px; margin-top: 4px; }
+        .back-button { background-color: #666; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin-bottom: 20px; }
+        .back-button:hover { background-color: #555; }
+    </style>
+</head>
+<body>
+    <button class="back-button" onclick="window.location.href='index.html'">返回首页</button>
+    <div class="container">
+        <h1>物品查询</h1>
+        <div class="search-bar">
+            <input type="text" id="searchName" placeholder="输入物品名称">
+            <select id="searchQrcode">
+                <option value="">按二维码筛选</option>
+            </select>
+            <button onclick="doSearch()">搜索</button>
+        </div>
+        <div class="result-list" id="resultList"></div>
+    </div>
+    <script>
+        async function loadQRCodes() {
+            const res = await fetch('/v1/qrcode/list');
+            const list = await res.json();
+            const sel = document.getElementById('searchQrcode');
+            sel.innerHTML = '<option value="">按二维码筛选</option>';
+            list.forEach(qr => {
+                const opt = document.createElement('option');
+                opt.value = qr.id;
+                opt.textContent = qr.content + (qr.description ? ` (${qr.description})` : '');
+                sel.appendChild(opt);
+            });
+        }
+        async function doSearch() {
+            const name = document.getElementById('searchName').value.trim();
+            const qrcodeId = document.getElementById('searchQrcode').value;
+            let url = `/v1/object/search?`;
+            if (name) url += `name=${encodeURIComponent(name)}&`;
+            if (qrcodeId) url += `qrcodeId=${qrcodeId}`;
+            const res = await fetch(url);
+            const list = await res.json();
+            const box = document.getElementById('resultList');
+            box.innerHTML = '';
+            if (list.length === 0) {
+                box.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#888;">无匹配物品</div>';
+                return;
+            }
+            list.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'item-card';
+                card.innerHTML = `
+                    <img class="item-thumb" src="${item.photoUrl}" alt="thumb">
+                    <div class="item-name">${item.name}</div>
+                    <div class="item-qrcode">
+                        ${(item.qrcodes && item.qrcodes.length > 0) ? item.qrcodes.map(qr => `<div>${qr.content}<br>${qr.imageUrl ? `<img src='${qr.imageUrl}' alt='二维码'>` : ''}</div>`).join('') : '<span style="color:#aaa;">无二维码</span>'}
+                    </div>
+                `;
+                box.appendChild(card);
+            });
+        }
+        loadQRCodes();
+        doSearch();
+        document.getElementById('searchName').addEventListener('keydown', function(e) { if (e.key === 'Enter') doSearch(); });
+        document.getElementById('searchQrcode').addEventListener('change', doSearch);
+    </script>
+</body>
+</html> 

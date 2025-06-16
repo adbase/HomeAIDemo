@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Object Detail</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .object-image {
+            width: 100%;
+            max-height: 400px;
+            object-fit: contain;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .object-info {
+            margin-top: 20px;
+        }
+        .object-name {
+            color: #333;
+            margin: 0 0 10px 0;
+        }
+        .object-description {
+            color: #666;
+            line-height: 1.6;
+        }
+        .back-button {
+            background-color: #666;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        .back-button:hover {
+            background-color: #555;
+        }
+    </style>
+</head>
+<body>
+    <button class="back-button" onclick="window.location.href='index.html'">返回首页</button>
+    <div class="container">
+        <button class="back-button" onclick="window.location.href='list.html'">Back to List</button>
+        <div id="objectDetail">
+            <img id="objectImage" class="object-image" alt="Object image">
+            <div class="object-info">
+                <h1 id="objectName" class="object-name"></h1>
+                <p id="objectCategory" style="color:#007bff;font-weight:bold;"></p>
+                <p id="objectObjectName" style="color:#009688;"></p>
+                <p id="objectDescription" class="object-description"></p>
+                <div id="qrcodeList"></div>
+                <div style="margin-top:20px;">
+                    <label for="qrcodeSelect">二维码关联：</label>
+                    <select id="qrcodeSelect" style="min-width:200px;">
+                        <option value="">无</option>
+                    </select>
+                    <button id="saveQrcodeBtn" style="margin-left:10px;">保存二维码关联</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function loadObjectDetail() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const id = urlParams.get('id');
+
+            if (!id) {
+                alert('Object ID not found');
+                window.location.href = 'list.html';
+                return;
+            }
+
+            try {
+                const response = await fetch(`/v1/object/detail/${id}`);
+                const object = await response.json();
+
+                document.getElementById('objectImage').src = object.photoUrl;
+                document.getElementById('objectName').textContent = object.name;
+                document.getElementById('objectCategory').textContent = object.category ? '分类: ' + object.category : '';
+                document.getElementById('objectObjectName').textContent = object.objectName ? '物体名称: ' + object.objectName : '';
+                document.getElementById('objectDescription').textContent = object.description;
+                // 展示二维码信息
+                if (object.qrcodes && object.qrcodes.length > 0) {
+                    document.getElementById('qrcodeList').innerHTML = '二维码: ' + object.qrcodes.map(qr => `<span style="margin-right:10px">${qr.content} (${qr.description||''})</span>`).join('');
+                } else {
+                    document.getElementById('qrcodeList').innerHTML = '二维码: 无';
+                }
+                // 加载所有二维码，渲染单选下拉
+                const allQrRes = await fetch('/v1/qrcode/list');
+                const allQrs = await allQrRes.json();
+                const select = document.getElementById('qrcodeSelect');
+                select.innerHTML = '<option value="">无</option>';
+                allQrs.forEach(qr => {
+                    const opt = document.createElement('option');
+                    opt.value = qr.id;
+                    opt.textContent = qr.content + (qr.description ? ` (${qr.description})` : '');
+                    if (object.qrcodeIds && object.qrcodeIds.length === 1 && object.qrcodeIds[0] === qr.id) opt.selected = true;
+                    select.appendChild(opt);
+                });
+                // 保存按钮事件
+                document.getElementById('saveQrcodeBtn').onclick = async function() {
+                    const selected = select.value ? [Number(select.value)] : [];
+                    await fetch(`/v1/object/${id}/qrcodes`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(selected)
+                    });
+                    alert('二维码关联已保存');
+                    loadObjectDetail(); // 刷新
+                };
+            } catch (err) {
+                console.error('Error loading object detail:', err);
+                alert('Error loading object detail');
+            }
+        }
+
+        loadObjectDetail();
+    </script>
+</body>
+</html> 

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>二维码管理</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 20px; }
+        h1 { text-align: center; }
+        .qrcode-list { margin-top: 30px; }
+        .qrcode-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
+        .qrcode-content { flex: 1; }
+        .qrcode-actions { margin-left: 20px; }
+        .btn { padding: 6px 14px; border: none; border-radius: 4px; cursor: pointer; }
+        .btn-add { background: #007bff; color: #fff; margin-bottom: 20px; }
+        .btn-del { background: #e74c3c; color: #fff; }
+        .modal { display: none; position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); align-items: center; justify-content: center; }
+        .modal-content { background: #fff; padding: 30px; border-radius: 8px; min-width: 300px; }
+        .modal input, .modal textarea { width: 100%; margin-bottom: 10px; padding: 6px; border-radius: 4px; border: 1px solid #ccc; }
+        .modal .btn { width: 100%; }
+        .back-button { background-color: #666; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin-bottom: 20px; }
+        .back-button:hover { background-color: #555; }
+    </style>
+</head>
+<body>
+    <button class="back-button" onclick="window.location.href='index.html'">返回首页</button>
+    <div class="container">
+        <button class="btn btn-add" onclick="showAddModal()">新增二维码</button>
+        <h1>二维码管理</h1>
+        <div class="qrcode-list" id="qrcodeList"></div>
+    </div>
+    <div class="modal" id="addModal">
+        <div class="modal-content">
+            <h3>新增二维码</h3>
+            <input id="qrcodeContent" placeholder="二维码内容">
+            <input id="qrcodeDesc" placeholder="二维码描述（可选）">
+            <button class="btn btn-add" onclick="addQRCode()">确认新增</button>
+            <button class="btn" onclick="hideAddModal()">取消</button>
+        </div>
+    </div>
+    <script>
+        function showAddModal() {
+            document.getElementById('addModal').style.display = 'flex';
+        }
+        function hideAddModal() {
+            document.getElementById('addModal').style.display = 'none';
+        }
+        async function loadQRCodes() {
+            const res = await fetch('/v1/qrcode/list');
+            const list = await res.json();
+            const box = document.getElementById('qrcodeList');
+            box.innerHTML = '';
+            list.forEach(qr => {
+                const row = document.createElement('div');
+                row.className = 'qrcode-row';
+                row.innerHTML = `<div class="qrcode-content"><b>${qr.content}</b><br><span style='color:#888;'>${qr.description||''}</span></div>
+                    <div class="qrcode-actions"><button class='btn btn-del' onclick='deleteQRCode(${qr.id})'>删除</button></div>`;
+                box.appendChild(row);
+            });
+        }
+        async function addQRCode() {
+            const content = document.getElementById('qrcodeContent').value.trim();
+            const description = document.getElementById('qrcodeDesc').value.trim();
+            if (!content) { alert('二维码内容不能为空'); return; }
+            await fetch('/v1/qrcode/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content, description })
+            });
+            hideAddModal();
+            loadQRCodes();
+        }
+        async function deleteQRCode(id) {
+            if (!confirm('确定要删除该二维码吗？')) return;
+            await fetch(`/v1/qrcode/${id}`, { method: 'DELETE' });
+            loadQRCodes();
+        }
+        loadQRCodes();
+    </script>
+</body>
+</html> 
